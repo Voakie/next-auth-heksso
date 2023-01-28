@@ -5,7 +5,7 @@
     "email": "contact@voakie.com"
   },
   "license": "MIT",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "prepublish": "rm lib/ -r && tsc",
     "build": "tsc",
@@ -26,6 +26,13 @@
     "typescript": "^4.9.4"
   },
   "exports": {
-    "./*": "./lib/*"
+    "./api": {
+      "import": "./lib/api/index.js",
+      "types": "./lib/api/index.d.ts"
+    },
+    "./react": {
+      "import": "./lib/react/index.js",
+      "types": "./lib/react/index.d.ts"
+    }
   }
 }
