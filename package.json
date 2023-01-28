@@ -5,14 +5,14 @@
     "email": "contact@voakie.com"
   },
   "license": "MIT",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "scripts": {
-    "prepublish": "rm lib/ -r && tsc",
+    "prepublish": "rm api/ -r && rm react/ -r && tsc",
     "build": "tsc",
-    "clean": "rm lib/ -r"
+    "clean": "rm api/ -r && rm react/ -r -r"
   },
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "api/index.js",
+  "types": "api/index.d.ts",
   "dependencies": {
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.27",
@@ -24,15 +24,5 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^4.9.4"
-  },
-  "exports": {
-    "./api": {
-      "import": "./lib/api/index.js",
-      "types": "./lib/api/index.d.ts"
-    },
-    "./react": {
-      "import": "./lib/react/index.js",
-      "types": "./lib/react/index.d.ts"
-    }
   }
 }
