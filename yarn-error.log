@@ -34,14 +34,14 @@ npm manifest:
       "email": "contact@voakie.com"
     },
     "license": "MIT",
-    "version": "1.0.1",
+    "version": "1.0.9",
     "scripts": {
-      "prepublish": "rm lib/ -r && tsc",
+      "prepublish": "rm api/ -r && rm react/ -r && tsc",
       "build": "tsc",
-      "clean": "rm lib/ -r"
+      "clean": "rm api/ -r && rm react/ -r -r"
     },
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "api/index.js",
+    "types": "api/index.d.ts",
     "dependencies": {
       "@types/node": "^18.11.18",
       "@types/react": "^18.0.27",
@@ -53,10 +53,6 @@ npm manifest:
       "react": "^18.2.0",
       "react-dom": "^18.2.0",
       "typescript": "^4.9.4"
-    },
-    "exports": {
-      "./api": "./lib/api",
-      "./react": "./lib/react"
     }
   }
 

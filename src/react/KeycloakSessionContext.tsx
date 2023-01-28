@@ -1,16 +1,24 @@
 import { signOut, useSession } from "next-auth/react"
 import { useRouter } from "next/router"
-import React, { createContext, ReactNode, useCallback, useEffect, useState } from "react"
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react"
 
 export interface KeycloakSession {
+    isAuthenticated: boolean
+    accessTokenError: boolean
     getAccessToken: () => Promise<string>
 }
 
 export const KeycloakSessionContext = createContext<KeycloakSession>({
+    isAuthenticated: false,
+    accessTokenError: false,
     getAccessToken: async () => {
         return ""
     }
 })
+
+export function useKeycloakSession() {
+    return useContext(KeycloakSessionContext)
+}
 
 async function refreshAccessToken() {
     try {
@@ -71,11 +79,15 @@ export function KeycloakSessionProvider(props: {
         } else return accessToken
     }, [accessToken, accessTokenExpires])
 
+    const isAuthenticated = useMemo(() => {
+        return typeof accessToken === "string" && accessToken.length > 0
+    }, [accessToken])
+
     // Because this component is present on every page that requires a session,
     // we check for a valid refresh token here
     useEffect(() => {
         if (
-            !router.asPath.startsWith(props.signInPage || "/auth/signin") &&
+            !(router.asPath.split("?")[0] === (props.signInPage || "/auth/signin")) &&
             (session.status === "unauthenticated" || accessTokenError)
         ) {
             router.push(props.signInPage || "/auth/signin")
@@ -95,7 +107,7 @@ export function KeycloakSessionProvider(props: {
 
     return (
         <KeycloakSessionContext.Provider
-            value={{ getAccessToken }}
+            value={{ getAccessToken, isAuthenticated, accessTokenError }}
         >
             {props.children}
         </KeycloakSessionContext.Provider>
