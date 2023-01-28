@@ -1,11 +1,15 @@
 {
   "name": "next-auth-heksso",
   "author": {
-    "name": "Christopher",
-    "email": "craquet@posteo.de"
+    "name": "Voakie",
+    "email": "contact@voakie.com"
   },
+  "license": "MIT",
+  "version": "1.0.2",
   "scripts": {
-    "build": "tsc"
+    "prepublish": "rm lib/ -r && tsc",
+    "build": "tsc",
+    "clean": "rm lib/ -r"
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -13,10 +17,16 @@
     "@types/node": "^18.11.18",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
+    "eslint": "^8.32.0",
+    "eslint-config-next": "^13.1.6",
     "next": "^13.1.6",
     "next-auth": "^4.19.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^4.9.4"
+  },
+  "exports": {
+    "./api": "./lib/api",
+    "./react": "./lib/react"
   }
 }
