@@ -5,7 +5,7 @@
     "email": "contact@voakie.com"
   },
   "license": "MIT",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "scripts": {
     "prepublish": "rm lib/ -r && tsc",
     "build": "tsc",
