@@ -86,14 +86,6 @@ export function KeycloakSessionProvider(props: {
     // Because this component is present on every page that requires a session,
     // we check for a valid refresh token here
     useEffect(() => {
-        if (
-            !(router.asPath.split("?")[0] === (props.signInPage || "/auth/signin")) &&
-            (session.status === "unauthenticated" || accessTokenError)
-        ) {
-            router.push(props.signInPage || "/auth/signin")
-            return
-        }
-
         if ((session.data as any)?.error === "RefreshAccessTokenError") {
             signOut() // Force sign in to get a new refresh token
         } else if ((session.data as any)?.accessToken) {
