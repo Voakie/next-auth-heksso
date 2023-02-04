@@ -1,15 +1,13 @@
 import { signOut, useSession } from "next-auth/react"
-import { useRouter } from "next/router"
-import React, { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { NextRouter, useRouter } from "next/router"
+import React, { Component, createContext, PropsWithChildren, useContext } from "react"
 
 export interface KeycloakSession {
-    isAuthenticated: boolean
     accessTokenError: boolean
     getAccessToken: () => Promise<string>
 }
 
 export const KeycloakSessionContext = createContext<KeycloakSession>({
-    isAuthenticated: false,
     accessTokenError: false,
     getAccessToken: async () => {
         return ""
@@ -32,7 +30,8 @@ async function refreshAccessToken() {
         const data = await response.json()
 
         if (data.error) {
-            throw data.error
+            console.error(data.error)
+            return undefined
         }
 
         return { accessToken: data.accessToken, accessTokenExpires: data.accessTokenExpires }
@@ -42,27 +41,78 @@ async function refreshAccessToken() {
     }
 }
 
-export function KeycloakSessionProvider(props: {
-    children: ReactNode | ReactNode[]
+interface KeycloakSessionProviderProps {
+    session: ReturnType<typeof useSession>
+    router: NextRouter
     signInPage?: string
-}) {
-    const session = useSession()
+}
+
+interface KeycloakSessionProviderState {
+    accessToken?: string
+    accessTokenError: boolean
+    accessTokenExpires?: number
+}
+
+export function KeycloakSessionProvider({
+    signInPage,
+    children
+}: PropsWithChildren<{ signInPage?: string }>) {
     const router = useRouter()
+    const session = useSession()
 
-    const [accessToken, setAccessToken] = useState<string | undefined>(undefined)
-    const [accessTokenError, setAccessTokenError] = useState(false)
-    const [accessTokenExpires, setAccessTokenExpires] = useState<number | undefined>(undefined)
+    return (
+        <_KeycloakSessionProvider session={session} router={router} signInPage={signInPage}>
+            {children}
+        </_KeycloakSessionProvider>
+    )
+}
 
-    const getAccessToken = useCallback(async () => {
-        if (!accessToken) return undefined
-        if (accessTokenExpires && Date.now() >= accessTokenExpires) {
+// Proxy class component to prevent unnecessary re-renders
+class _KeycloakSessionProvider extends Component<
+    PropsWithChildren<KeycloakSessionProviderProps>,
+    KeycloakSessionProviderState
+> {
+    private contextValue
+
+    constructor(props: KeycloakSessionProviderProps) {
+        super(props)
+
+        this.state = {
+            accessTokenError: false
+        }
+
+        this.getAccessToken = this.getAccessToken.bind(this)
+        this.getContextValue = this.getContextValue.bind(this)
+
+        this.contextValue = {
+            getAccessToken: this.getAccessToken,
+            accessTokenError: false
+        }
+    }
+
+    private getContextValue() {
+        if (this.state.accessTokenError !== this.contextValue.accessTokenError) {
+            this.contextValue = {
+                getAccessToken: this.getAccessToken,
+                accessTokenError: this.state.accessTokenError
+            }
+        }
+
+        return this.contextValue
+    }
+
+    async getAccessToken() {
+        if (!this.state.accessToken) return undefined
+        if (this.state.accessTokenExpires && Date.now() >= this.state.accessTokenExpires) {
             try {
                 const refreshed = await refreshAccessToken()
 
                 if (refreshed) {
-                    setAccessTokenError(false)
-                    setAccessToken(refreshed.accessToken)
-                    setAccessTokenExpires(refreshed.accessTokenExpires)
+                    this.setState({
+                        accessTokenError: false,
+                        accessToken: refreshed.accessToken,
+                        accessTokenExpires: refreshed.accessTokenExpires
+                    })
                     return refreshed.accessToken
                 } else {
                     // Refresh failed due to network error
@@ -71,37 +121,65 @@ export function KeycloakSessionProvider(props: {
             } catch (e) {
                 // Refresh failed because keycloak denied the request
                 console.error(e)
-                setAccessTokenError(true)
-                setAccessToken(undefined)
-                setAccessTokenExpires(undefined)
+                this.setState({
+                    accessTokenError: true,
+                    accessToken: undefined,
+                    accessTokenExpires: undefined
+                })
                 return undefined
             }
-        } else return accessToken
-    }, [accessToken, accessTokenExpires])
+        } else return this.state.accessToken
+    }
 
-    const isAuthenticated = useMemo(() => {
-        return typeof accessToken === "string" && accessToken.length > 0
-    }, [accessToken])
+    componentDidUpdate(
+        prevProps: Readonly<React.PropsWithChildren<KeycloakSessionProviderProps>>,
+        prevState: Readonly<KeycloakSessionProviderState>,
+        snapshot?: any
+    ) {
+        if (sessionDataGuard(this.props.session.data)) {
+            const { error, accessToken, accessTokenExpires } = this.props.session.data
 
-    // Because this component is present on every page that requires a session,
-    // we check for a valid refresh token here
-    useEffect(() => {
-        if ((session.data as any)?.error === "RefreshAccessTokenError") {
-            signOut() // Force sign in to get a new refresh token
-        } else if ((session.data as any)?.accessToken) {
-            setAccessToken((session.data as any)?.accessToken as string),
-            setAccessTokenExpires((session.data as any)?.accessTokenExpires as number)
-        } else {
-            setAccessToken(undefined)
-            setAccessTokenExpires(undefined)
+            if (error === "RefreshAccessTokenError") {
+                // Force sign in to get a new refresh token
+                signOut({ redirect: true, callbackUrl: "/" }).then()
+            } else if (accessToken && accessToken != this.state.accessToken) {
+                this.setState({
+                    accessToken,
+                    accessTokenExpires
+                })
+            } else if (!accessToken) {
+                this.setState({
+                    accessToken: undefined,
+                    accessTokenExpires: undefined
+                })
+            }
         }
-    }, [session, router.pathname, accessToken, router, props.signInPage, accessTokenError])
+    }
 
-    return (
-        <KeycloakSessionContext.Provider
-            value={{ getAccessToken, isAuthenticated, accessTokenError }}
-        >
-            {props.children}
-        </KeycloakSessionContext.Provider>
-    )
+    render() {
+        return (
+            <KeycloakSessionContext.Provider value={this.getContextValue()}>
+                {this.props.children}
+            </KeycloakSessionContext.Provider>
+        )
+    }
+}
+
+function sessionDataGuard(
+    sessionData: unknown
+): sessionData is { error?: string; accessToken?: string; accessTokenExpires?: number } {
+    if (sessionData && typeof sessionData === "object") {
+        if (!("error" in sessionData) || typeof sessionData.error === "string") {
+            if (!("accessToken" in sessionData) || typeof sessionData.accessToken === "string") {
+                if (
+                    !("accessTokenExpires" in sessionData) ||
+                    typeof sessionData.accessTokenExpires === "number"
+                ) {
+                    return true
+                }
+            }
+        }
+    }
+
+    return false
 }
