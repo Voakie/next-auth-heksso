@@ -102,8 +102,10 @@ class _KeycloakSessionProvider extends Component<
     }
 
     async getAccessToken() {
-        if (!this.state.accessToken) return undefined
-        if (this.state.accessTokenExpires && Date.now() >= this.state.accessTokenExpires) {
+        if (
+            !this.state.accessToken ||
+            (this.state.accessTokenExpires && Date.now() >= this.state.accessTokenExpires)
+        ) {
             try {
                 const refreshed = await refreshAccessToken()
 
