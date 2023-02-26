@@ -1,6 +1,8 @@
-import { signOut, useSession } from "next-auth/react"
-import { NextRouter, useRouter } from "next/router"
+import type { signOut as nextAuthSignOut, useSession } from "next-auth/react"
+import { NextRouter } from "next/router"
 import React, { Component, createContext, PropsWithChildren, useContext } from "react"
+
+type NextAuthSession = ReturnType<typeof useSession>
 
 export interface KeycloakSession {
     accessTokenError: boolean
@@ -14,7 +16,7 @@ export const KeycloakSessionContext = createContext<KeycloakSession>({
     }
 })
 
-export function useKeycloakSession() {
+export function useKeycloakSession(): KeycloakSession {
     return useContext(KeycloakSessionContext)
 }
 
@@ -44,7 +46,7 @@ async function refreshAccessToken() {
 interface KeycloakSessionProviderProps {
     session: ReturnType<typeof useSession>
     router: NextRouter
-    signInPage?: string
+    signOut: typeof nextAuthSignOut
 }
 
 interface KeycloakSessionProviderState {
@@ -53,15 +55,26 @@ interface KeycloakSessionProviderState {
     accessTokenExpires?: number
 }
 
+/**
+ * Provider for the useKeycloakSession react hook. Has to directly hook into next-auth and next/router
+ * @param router Next.js router (retrieve with `useRouter()`)
+ * @param session Next Auth Session (retrieve with `useSession()`)
+ * @param signOut Next Auth Sign Out function (exported by "next-auth/react")
+ * @param children
+ * @constructor
+ */
 export function KeycloakSessionProvider({
-    signInPage,
+    router,
+    session,
+    signOut,
     children
-}: PropsWithChildren<{ signInPage?: string }>) {
-    const router = useRouter()
-    const session = useSession()
-
+}: PropsWithChildren<{
+    session: NextAuthSession
+    router: NextRouter
+    signOut: typeof nextAuthSignOut
+}>) {
     return (
-        <_KeycloakSessionProvider session={session} router={router} signInPage={signInPage}>
+        <_KeycloakSessionProvider session={session} router={router} signOut={signOut}>
             {children}
         </_KeycloakSessionProvider>
     )
@@ -143,7 +156,7 @@ class _KeycloakSessionProvider extends Component<
 
             if (error === "RefreshAccessTokenError") {
                 // Force sign in to get a new refresh token
-                signOut({ redirect: true, callbackUrl: "/" }).then()
+                this.props.signOut({ redirect: true, callbackUrl: "/" }).then()
             } else if (accessToken && accessToken != this.state.accessToken) {
                 this.setState({
                     accessToken,

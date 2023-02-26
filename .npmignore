@@ -1,2 +1,5 @@
 .prettierrc
 node_modules
+.yarn
+.idea
+.env.example
