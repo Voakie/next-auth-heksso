@@ -1,5 +1,4 @@
 import type { signOut as nextAuthSignOut, useSession } from "next-auth/react"
-import { NextRouter } from "next/router"
 import React, { Component, createContext, PropsWithChildren, useContext } from "react"
 
 type NextAuthSession = ReturnType<typeof useSession>
@@ -45,7 +44,6 @@ async function refreshAccessToken() {
 
 interface KeycloakSessionProviderProps {
     session: ReturnType<typeof useSession>
-    router: NextRouter
     signOut: typeof nextAuthSignOut
 }
 
@@ -64,17 +62,15 @@ interface KeycloakSessionProviderState {
  * @constructor
  */
 export function KeycloakSessionProvider({
-    router,
     session,
     signOut,
     children
 }: PropsWithChildren<{
     session: NextAuthSession
-    router: NextRouter
     signOut: typeof nextAuthSignOut
 }>) {
     return (
-        <_KeycloakSessionProvider session={session} router={router} signOut={signOut}>
+        <_KeycloakSessionProvider session={session} signOut={signOut}>
             {children}
         </_KeycloakSessionProvider>
     )
@@ -146,11 +142,7 @@ class _KeycloakSessionProvider extends Component<
         } else return this.state.accessToken
     }
 
-    componentDidUpdate(
-        prevProps: Readonly<React.PropsWithChildren<KeycloakSessionProviderProps>>,
-        prevState: Readonly<KeycloakSessionProviderState>,
-        snapshot?: any
-    ) {
+    componentDidUpdate() {
         if (sessionDataGuard(this.props.session.data)) {
             const { error, accessToken, accessTokenExpires } = this.props.session.data
 
