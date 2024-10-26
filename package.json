@@ -5,10 +5,10 @@
     "email": "contact@voakie.com"
   },
   "license": "MIT",
-  "version": "1.1.11",
+  "version": "1.1.13",
   "scripts": {
     "prepublish": "run-script-os",
-    "prepublish:default": "rm api/ -r && rm react/ -r && tsc",
+    "prepublish:default": "rm api/ -rf && rm react/ -rf && tsc",
     "prepublish:windows": "del /s /q api && del /s /q react",
     "build": "tsc",
     "clean": "run-script-os",
@@ -18,16 +18,16 @@
   "main": "api/index.js",
   "types": "api/index.d.ts",
   "dependencies": {
-    "@types/node": "^18.11.18",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "eslint": "^8.0.0",
-    "eslint-config-next": "^14.2.5",
-    "next": "^14.2.5",
-    "next-auth": "^4.24.7",
+    "@types/node": "^22.8.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^9.13.0",
+    "eslint-config-next": "^15.0.1",
+    "next": "^15.0.1",
+    "next-auth": "^4.24.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "typescript": "^5.5.4"
+    "typescript": "^5.6.3"
   },
   "devDependencies": {
     "run-script-os": "^1.1.6"
