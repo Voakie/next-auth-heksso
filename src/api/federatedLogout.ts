@@ -4,8 +4,7 @@ import * as jwt from "next-auth/jwt"
 
 /**
  * Provides a next api route for performing a federated logout of the user (logs ouf of keycloak)
- * @param req NextApiRequest
- * @param res NextApiRequest
+ * @param logoutPath Post redirect URI
  * @returns
  */
 export function federatedLogout(logoutPath: string) {

@@ -1,6 +1,6 @@
 # Next-Auth config for use with HEKsso (Keycloak)
 
-The rollowing environment variables are required:
+The following environment variables are required:
 
     NEXTAUTH_SECRET
     NEXTAUTH_URL
