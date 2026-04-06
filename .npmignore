@@ -3,3 +3,8 @@ node_modules
 .yarn
 .idea
 .env.example
+src
+.eslintrc.js
+*.tgz
+*.json
+.*

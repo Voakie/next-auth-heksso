@@ -1,1 +1,1 @@
-export * from "./KeycloakSessionContext"
+export * from "./KeycloakSessionContext.js"

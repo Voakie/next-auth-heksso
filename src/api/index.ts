@@ -1,2 +1,2 @@
-export * from "./federatedLogout"
-export * from "./nextAuthConfig"
+export * from "./federatedLogout.js"
+export * from "./nextAuthConfig.js"
